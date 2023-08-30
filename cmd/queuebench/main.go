@@ -73,8 +73,9 @@ func main() {
 	ctx := context.Background()
 	ctx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
 	defer stop()
+	start := time.Now()
 
-	run := time.Now().Unix()
+	run := start.Unix()
 	log.Printf("running bench run: %d", run)
 
 	bench := bench{
@@ -106,7 +107,7 @@ func main() {
 	}
 	defer teardown()
 
-	start := time.Now()
+	benchStart := time.Now()
 	log.Println("==> running benchmark")
 
 	log.Println("start consuming")
@@ -175,7 +176,7 @@ wait:
 		log.Panicf("error closing producer: %s", err)
 	}
 
-	duration := time.Since(start)
+	duration := time.Since(benchStart)
 	log.Printf("it took %s (-duration=%s)", duration, cfg.duration)
 	log.Printf("time spent producing: %s", productionduration)
 	log.Printf("time spent consuming: %s", consumptionduration)
@@ -186,6 +187,9 @@ wait:
 	if err = display(rm); err != nil {
 		log.Panicf("failed displaying metrics: %s", err)
 	}
+
+	end := time.Now()
+	log.Println("ended", end)
 
 	if totalproduced != totalconsumed {
 		log.Panicf("total produced and consumed don't match: %d vs %d", totalproduced, totalconsumed)
