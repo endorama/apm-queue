@@ -42,3 +42,64 @@ func getSumInt64Metric(instrument string, metric string, rm metricdata.ResourceM
 
 	return 0
 }
+
+type HistogramBoundCount struct {
+	Bound float64 `json:"bound"`
+	Count uint64  `json:"count"`
+}
+
+type HistogramResult struct {
+	Min   float64 `json:"min"`
+	Max   float64 `json:"max"`
+	Avg   float64 `json:"avg"`
+	Sum   float64 `json:"sum"`
+	Count uint64  `json:"count"`
+
+	Bounds []HistogramBoundCount `json:"bounds"`
+}
+
+func getHistogramFloat64Metric(instrument, metric string, rm metricdata.ResourceMetrics) HistogramResult {
+	metrics := filterMetrics(instrument, rm.ScopeMetrics)
+	if len(metrics) == 0 {
+		return HistogramResult{}
+	}
+
+	var values metricdata.Histogram[float64]
+	for _, m := range metrics {
+		if m.Name == metric {
+			values = m.Data.(metricdata.Histogram[float64])
+			// return sum(m.Data.(metricdata.Sum[int64]).DataPoints)
+		}
+	}
+
+	data := values.DataPoints[0]
+
+	getValueOrEmpty := func(value metricdata.Extrema[float64]) float64 {
+		if v, ok := value.Value(); ok {
+			return v
+		}
+		return 0.0
+	}
+	avg := func(a metricdata.Extrema[float64], b metricdata.Extrema[float64]) float64 {
+		return (getValueOrEmpty(a) + getValueOrEmpty(b)) / 2
+	}
+	getBoundsCounts := func(dp metricdata.HistogramDataPoint[float64]) []HistogramBoundCount {
+		bcs := []HistogramBoundCount{}
+		for i, b := range dp.Bounds {
+			bcs = append(bcs, HistogramBoundCount{
+				Bound: b,
+				Count: dp.BucketCounts[i],
+			})
+		}
+		return bcs
+	}
+
+	return HistogramResult{
+		Min:    getValueOrEmpty(data.Min),
+		Max:    getValueOrEmpty(data.Max),
+		Avg:    avg(data.Min, data.Max),
+		Sum:    data.Sum,
+		Count:  data.Count,
+		Bounds: getBoundsCounts(data),
+	}
+}

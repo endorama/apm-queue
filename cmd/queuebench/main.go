@@ -189,7 +189,7 @@ wait:
 	}
 
 	end := time.Now()
-	log.Println("ended", end)
+	machineoutput(cfg.output, run, duration, productionduration, consumptionduration, benchStart, end, cfg, rm)
 
 	if totalproduced != totalconsumed {
 		log.Panicf("total produced and consumed don't match: %d vs %d", totalproduced, totalconsumed)
@@ -211,6 +211,7 @@ func produce(ctx context.Context, p *kafka.Producer, topic apmqueue.Topic, size 
 	}
 
 	deadline := time.Now().Add(duration)
+	log.Printf("deadline: %s", deadline)
 	for time.Now().Before(deadline) {
 		if err := p.Produce(ctx, record); err != nil {
 			return err
