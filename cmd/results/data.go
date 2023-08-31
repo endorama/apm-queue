@@ -47,3 +47,13 @@ type ResultData struct {
 	Leftover         int64           `json:"leftover"`
 	ConsumptionDelay HistogramResult `json:"consumption_delay"`
 }
+
+ 
+ 
+ 
+ 
+ 
+ 
+
+ 
+
