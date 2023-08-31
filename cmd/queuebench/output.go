@@ -7,39 +7,9 @@ import (
 	"log"
 	"time"
 
+	"github.com/elastic/apm-queue/cmd/queuebench/pkg/model"
 	"go.opentelemetry.io/otel/sdk/metric/metricdata"
 )
-
-type BenchConfig struct {
-	EventSize  int    `json:"event_size"`
-	Partitions int    `json:"partitions"`
-	Duration   string `json:"duration"`
-	Timeout    string `json:"timeout"`
-}
-
-type BenchMeta struct {
-	Run       string      `json:"run_id"`
-	StartTime time.Time   `json:"start_time"`
-	EndTime   time.Time   `json:"end_time"`
-	Config    BenchConfig `json:"config"`
-}
-
-type BenchDuration struct {
-	Total       string `json:"total"`
-	Production  string `json:"production"`
-	Consumption string `json:"consumption"`
-}
-
-type ResultData struct {
-	Meta             BenchMeta       `json:"meta"`
-	Duration         BenchDuration   `json:"duration"`
-	Produced         int64           `json:"produced"`
-	ProducedBytes    int64           `json:"produced_bytes"`
-	Consumed         int64           `json:"consumed"`
-	ConsumedBytes    int64           `json:"consumed_bytes"`
-	Leftover         int64           `json:"leftover"`
-	ConsumptionDelay HistogramResult `json:"consumption_delay"`
-}
 
 func machineoutput(w io.Writer, run int64, realduration, productionduration, consumptionduration time.Duration, start, end time.Time, cfg config, rm metricdata.ResourceMetrics) error {
 	totalbytesproduced := getSumInt64Metric("github.com/twmb/franz-go/plugin/kotel", "messaging.kafka.produce_bytes.count", rm)
@@ -48,32 +18,37 @@ func machineoutput(w io.Writer, run int64, realduration, productionduration, con
 	totalconsumed := getSumInt64Metric("github.com/elastic/apm-queue/kafka", "consumer.messages.fetched", rm)
 	delay := getHistogramFloat64Metric("github.com/elastic/apm-queue/kafka", "consumer.messages.delay", rm)
 
-	data := ResultData{
-		Meta: BenchMeta{
-			Run:       fmt.Sprintf("run-%d", run),
+	data := model.BenchResult{
+		Meta: model.BenchMeta{
+			RunID:     fmt.Sprintf("run-%d", run),
 			StartTime: start,
 			EndTime:   end,
-			Config: BenchConfig{
-				Duration:   cfg.duration.String(),
+			Config: model.BenchConfig{
+				Duration:   cfg.duration.Seconds(),
 				EventSize:  cfg.eventSize,
 				Partitions: cfg.partitions,
-				Timeout:    cfg.timeout.String(),
+				Timeout:    cfg.timeout.Seconds(),
 			},
 		},
-		Duration: BenchDuration{
-			Total:       realduration.String(),
-			Production:  productionduration.String(),
-			Consumption: consumptionduration.String(),
+		Duration: model.BenchDuration{
+			Total:       realduration.Seconds(),
+			Production:  productionduration.Seconds(),
+			Consumption: consumptionduration.Seconds(),
 		},
-		Produced:         totalproduced,
-		ProducedBytes:    totalbytesproduced,
-		Consumed:         totalconsumed,
-		ConsumedBytes:    totalbytesfetched,
-		Leftover:         totalproduced - totalconsumed,
-		ConsumptionDelay: delay,
+		Produced:      totalproduced,
+		ProducedBytes: totalbytesproduced,
+		Consumed:      totalconsumed,
+		ConsumedBytes: totalbytesfetched,
+		Leftover:      totalproduced - totalconsumed,
+		ConsumptionDelay: model.Histogram{
+			Values: delay.Bounds.Boundaries,
+			Counts: delay.Bounds.Counts,
+		},
+		MinConsumptionDelay:        delay.Min,
+		MaxConsumptionDelay:        delay.Max,
+		SumConsumptionDelay:        delay.Sum,
+		ConsumptionDelayTotalCount: delay.Count,
 	}
-
-	// stats(data)
 
 	b, err := json.Marshal(data)
 	if err != nil {
@@ -88,16 +63,3 @@ func machineoutput(w io.Writer, run int64, realduration, productionduration, con
 
 	return nil
 }
-
-// func stats(data ResultData) {
-// 	productionduration, err := time.ParseDuration(data.Duration.Production)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-
-// 	producedBytesPerSecond := data.Produced / int64(productionduration)
-// 	log.Println("produced_bytes_per_second:", producedBytesPerSecond)
-
-//   consumedBytesPerSecond := data.Consumed /
-
-// }
