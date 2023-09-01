@@ -11,7 +11,7 @@ import (
 	"go.opentelemetry.io/otel/sdk/metric/metricdata"
 )
 
-func machineoutput(w io.Writer, run int64, realduration, productionduration, consumptionduration time.Duration, start, end time.Time, cfg config, rm metricdata.ResourceMetrics) error {
+func gatherresutls(run int64, realduration, productionduration, consumptionduration time.Duration, start, end time.Time, cfg config, rm metricdata.ResourceMetrics) model.BenchResult {
 	totalbytesproduced := getSumInt64Metric("github.com/twmb/franz-go/plugin/kotel", "messaging.kafka.produce_bytes.count", rm)
 	totalbytesfetched := getSumInt64Metric("github.com/twmb/franz-go/plugin/kotel", "messaging.kafka.fetch_bytes.count", rm)
 	totalproduced := getSumInt64Metric("github.com/elastic/apm-queue/kafka", "producer.messages.produced", rm)
@@ -50,6 +50,10 @@ func machineoutput(w io.Writer, run int64, realduration, productionduration, con
 		ConsumptionDelayTotalCount: delay.Count,
 	}
 
+	return data
+}
+
+func machineoutput(w io.Writer, data model.BenchResult) error {
 	b, err := json.Marshal(data)
 	if err != nil {
 		return fmt.Errorf("cannot marshal result to json: %w", err)

@@ -189,7 +189,8 @@ wait:
 	}
 
 	end := time.Now()
-	machineoutput(cfg.output, run, duration, productionduration, consumptionduration, benchStart, end, cfg, rm)
+	data := gatherresutls(run, duration, productionduration, consumptionduration, benchStart, end, cfg, rm)
+	machineoutput(cfg.output, data)
 
 	if totalproduced != totalconsumed {
 		log.Panicf("total produced and consumed don't match: %d vs %d", totalproduced, totalconsumed)
