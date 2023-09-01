@@ -190,7 +190,7 @@ wait:
 
 	end := time.Now()
 	data := gatherresutls(run, duration, productionduration, consumptionduration, benchStart, end, cfg, rm)
-	machineoutput(cfg.output, data)
+	store(cfg.output, data)
 
 	if totalproduced != totalconsumed {
 		log.Panicf("total produced and consumed don't match: %d vs %d", totalproduced, totalconsumed)
@@ -218,6 +218,29 @@ func produce(ctx context.Context, p *kafka.Producer, topic apmqueue.Topic, size 
 			return err
 		}
 	}
+
+	return nil
+}
+
+func store(file string, r model.BenchResult) error {
+	openfile := func(file string) (*os.File, error) {
+		f, err := os.OpenFile(file, os.O_CREATE|os.O_WRONLY, 0644)
+		if err != nil {
+			return nil, fmt.Errorf("cannot open specified file: %w", err)
+		}
+		return f, nil
+	}
+
+	outjson := os.Stdout
+	if file != "" {
+		var err error
+		outjson, err = openfile(fmt.Sprintf("%s.json", file))
+		if err != nil {
+			return err
+		}
+	}
+
+ machineoutput(outjson, r)
 
 	return nil
 }
