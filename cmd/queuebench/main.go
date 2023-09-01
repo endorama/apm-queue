@@ -33,6 +33,7 @@ import (
 	"go.uber.org/zap"
 
 	apmqueue "github.com/elastic/apm-queue"
+	"github.com/elastic/apm-queue/cmd/queuebench/pkg/model"
 	"github.com/elastic/apm-queue/kafka"
 )
 
@@ -240,7 +241,16 @@ func store(file string, r model.BenchResult) error {
 		}
 	}
 
- machineoutput(outjson, r)
+
+	log.Println("writing machine readable results")
+	b, err := r.ToJSON()
+	if err != nil {
+		return err
+	}
+	if _, err := outjson.Write(b); err != nil {
+		log.Panicf("cannot write machine readable results to io.Writer: %s", err)
+	}
+	outjson.Write([]byte("\n"))
 
 	return nil
 }

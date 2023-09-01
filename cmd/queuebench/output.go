@@ -1,10 +1,7 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
-	"log"
 	"time"
 
 	"github.com/elastic/apm-queue/cmd/queuebench/pkg/model"
@@ -51,19 +48,4 @@ func gatherresutls(run int64, realduration, productionduration, consumptiondurat
 	}
 
 	return data
-}
-
-func machineoutput(w io.Writer, data model.BenchResult) error {
-	b, err := json.Marshal(data)
-	if err != nil {
-		return fmt.Errorf("cannot marshal result to json: %w", err)
-	}
-
-	log.Println("writing machine readable results")
-	if _, err := w.Write(b); err != nil {
-		log.Panicf("cannot write machine readable results to io.Writer: %s", err)
-	}
-	w.Write([]byte("\n"))
-
-	return nil
 }
