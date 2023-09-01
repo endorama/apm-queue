@@ -247,30 +247,24 @@ func store(file string, r model.BenchResult) error {
 	}
 
 	out := os.Stdout
-	outjson := os.Stdout
 	if file != "" {
 		var err error
 		out, err = openfile(file)
 		if err != nil {
 			return err
 		}
-		outjson, err = openfile(fmt.Sprintf("%s.json", file))
-		if err != nil {
-			return err
-		}
 	}
-
-	r.ToGoBenchmark(out)
 
 	log.Println("writing machine readable results")
 	b, err := r.ToJSON()
 	if err != nil {
 		return err
 	}
-	if _, err := outjson.Write(b); err != nil {
+	if _, err := out.Write(b); err != nil {
+		fmt.Fprintf(out, string(b))
 		log.Panicf("cannot write machine readable results to io.Writer: %s", err)
 	}
-	outjson.Write([]byte("\n"))
+	out.Write([]byte("\n"))
 
 	return nil
 }
