@@ -22,6 +22,7 @@ func (r *BenchResult) ToGoBenchmark(w io.Writer) {
 	fmt.Fprintln(w, "event-size:", r.Meta.Config.EventSize)
 	fmt.Fprintln(w, "partitions:", r.Meta.Config.Partitions)
 	// Benchmark metadata
+	fmt.Fprintln(w, "# run-id:", r.Meta.RunID)
 	fmt.Fprintln(w, "# start-time:", r.Meta.StartTime)
 	fmt.Fprintln(w, "# end-time:", r.Meta.EndTime)
 	fmt.Fprintln(w, "# delay-min:", r.MinConsumptionDelay)
@@ -33,7 +34,7 @@ func (r *BenchResult) ToGoBenchmark(w io.Writer) {
 	// The benchmark output line in appropriate format: <name> <iterations> <value> <unit> [<value> <unit>...]
 	B2MB := 1000000.0
 	line := strings.Builder{}
-	line.WriteString(fmt.Sprintf("BenchmarkQueueRun%s 1 ", r.Meta.RunID))
+	line.WriteString(fmt.Sprintf("BenchmarkQueueRun 1 "))
 	line.WriteString(fmt.Sprintf("%d produced/op ", r.Produced))
 	line.WriteString(fmt.Sprintf("%.2f produced-MB/s ", float64(r.ProducedBytes)/B2MB))
 	line.WriteString(fmt.Sprintf("%d consumed/op ", r.Consumed))
