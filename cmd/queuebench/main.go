@@ -27,11 +27,8 @@ import (
 	"syscall"
 	"time"
 
-	"go.opentelemetry.io/otel/sdk/instrumentation"
-	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/metric/metricdata"
 	"go.opentelemetry.io/otel/trace"
-	"go.uber.org/zap"
 
 	apmqueue "github.com/elastic/apm-queue"
 	"github.com/elastic/apm-queue/cmd/queuebench/pkg/model"
@@ -50,45 +47,24 @@ func main() {
 		}
 	}()
 
+	var err error
+
+	start := time.Now()
+	log.Println("begin", start)
+
 	cfg := config{}
 	cfg.Parse()
 	log.Printf("parsed config: %+v\n", cfg)
 
 	log.Println("prep logger")
-	var logger *zap.Logger
-	var err error
-	if cfg.verbose {
-		logger, err = zap.NewDevelopment()
-		if err != nil {
-			log.Fatalf("cannot create zap logger: %s", err)
-		}
-	} else {
-		logger = zap.NewNop()
-	}
+	logger := prepLogger(cfg.verbose)
 
 	log.Println("prep MeterProvider")
-	rdr := sdkmetric.NewManualReader()
-	mp := sdkmetric.NewMeterProvider(
-		sdkmetric.WithReader(rdr),
-		sdkmetric.WithView(
-			sdkmetric.NewView(
-				sdkmetric.Instrument{
-					Name:  "consumer.messages.delay",
-					Scope: instrumentation.Scope{Name: "github.com/elastic/apm-queue/kafka"},
-				},
-				sdkmetric.Stream{
-					Aggregation: sdkmetric.AggregationExplicitBucketHistogram{
-						Boundaries: customHistogramBoundaries,
-					},
-				},
-			),
-		),
-	)
+	mp := prepMeterProvider()
 
 	ctx := context.Background()
 	ctx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	start := time.Now()
 
 	run := start.Unix()
 	log.Printf("running bench run: %d", run)
