@@ -20,7 +20,6 @@ package main
 import (
 	"flag"
 	"log"
-	"os"
 	"time"
 )
 
@@ -28,7 +27,7 @@ type config struct {
 	broker     string
 	duration   time.Duration
 	eventSize  int
-	output     *os.File
+	output     string
 	partitions int
 	timeout    time.Duration
 	verbose    bool
@@ -50,15 +49,6 @@ func (c *config) Parse() {
 		log.Fatal("-duration must be set and greater than 0")
 	}
 
-	output := os.Stdout
-	if *o != "" {
-		f, err := os.OpenFile(*o, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-		if err != nil {
-			log.Fatal("-output: cannot open specified file")
-		}
-		output = f
-	}
-
 	timeout, err := time.ParseDuration(*t)
 	if err != nil {
 		log.Fatalf("cannot parse -timeout '%s' as duration: %s", *t, err)
@@ -67,7 +57,7 @@ func (c *config) Parse() {
 	c.broker = *b
 	c.duration = time.Duration(*d) * time.Second
 	c.eventSize = 1024
-	c.output = output
+	c.output = *o
 	c.partitions = 1
 	c.timeout = timeout
 	c.verbose = *v
