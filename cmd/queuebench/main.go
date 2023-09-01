@@ -232,15 +232,21 @@ func store(file string, r model.BenchResult) error {
 		return f, nil
 	}
 
+	out := os.Stdout
 	outjson := os.Stdout
 	if file != "" {
 		var err error
+		out, err = openfile(file)
+		if err != nil {
+			return err
+		}
 		outjson, err = openfile(fmt.Sprintf("%s.json", file))
 		if err != nil {
 			return err
 		}
 	}
 
+	r.ToGoBenchmark(out)
 
 	log.Println("writing machine readable results")
 	b, err := r.ToJSON()
