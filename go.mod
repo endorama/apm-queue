@@ -7,6 +7,7 @@ require (
 	cloud.google.com/go/pubsub v1.33.0
 	cloud.google.com/go/pubsublite v1.8.1
 	github.com/aws/aws-sdk-go-v2/config v1.18.33
+	github.com/elastic/go-elasticsearch/v8 v8.9.0
 	github.com/google/go-cmp v0.5.9
 	github.com/googleapis/gax-go/v2 v2.12.0
 	github.com/stretchr/testify v1.8.4
