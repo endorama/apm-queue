@@ -60,7 +60,7 @@ func main() {
 	logger := prepLogger(cfg.verbose)
 
 	log.Println("prep MeterProvider")
-	mp := prepMeterProvider()
+	mp, rdr := prepMeterProvider()
 
 	ctx := context.Background()
 	ctx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)

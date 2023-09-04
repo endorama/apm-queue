@@ -32,7 +32,7 @@ var customHistogramBoundaries = []float64{
 	92681.9, 131072,
 }
 
-func prepMeterProvider() *sdkmetric.MeterProvider {
+func prepMeterProvider() (*sdkmetric.MeterProvider, sdkmetric.Reader) {
 	rdr := sdkmetric.NewManualReader()
 	return sdkmetric.NewMeterProvider(
 		sdkmetric.WithReader(rdr),
@@ -49,5 +49,5 @@ func prepMeterProvider() *sdkmetric.MeterProvider {
 				},
 			),
 		),
-	)
+	), rdr
 }
