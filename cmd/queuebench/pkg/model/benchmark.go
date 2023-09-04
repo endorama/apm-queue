@@ -51,20 +51,20 @@ func P(p float64, r Histogram) float64 {
 		return math.NaN()
 	}
 
-	total := 0
+	total := 0.0
 	for _, v := range r.Counts {
-		total += v
+		total += float64(v)
 	}
 	counts := r.Counts
 	boundaries := r.Values
 
-	op := 0.0
-	for a, b := range counts {
-		cp := float64(b * 100 / total)
-		if op+cp > p {
-			return boundaries[a]
+	percentile := 0.0
+	for i, v := range counts {
+		percentage := float64(v) * 100 / total
+		if percentile+percentage > p {
+			return boundaries[i]
 		}
-		op += cp
+		percentile += percentage
 	}
 	return boundaries[len(boundaries)-1]
 }
